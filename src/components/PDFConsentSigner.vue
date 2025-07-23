@@ -6,7 +6,6 @@
 </template>
 
 <script lang="ts">
-// ...
 import { DocusealForm } from '@docuseal/vue'
 
 export default {
