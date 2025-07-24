@@ -79,7 +79,7 @@
             <path d="m8 16 4-4 4 4" />
           </svg>
 
-          <h2 class="dz-title">Add documents or images</h2>
+          <h2 class="dz-title">Add documents</h2>
           <p class="dz-subtitle">Click to upload or drag and drop files</p>
 
           <input
