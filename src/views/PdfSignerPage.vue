@@ -264,6 +264,18 @@ onMounted(async () => {
   await renderAllPages()
 })
 
+/**
+ * Convert a Uint8Array into a base64 string without spreading into
+ * String.fromCharCode.
+ */
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  for (let i = 0, len = bytes.length; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
 /** --- PDF append & upload handlers --- **/
 async function appendPdfs(files: FileList) {
   const valid = Array.from(files).filter((f) => f.size > 0 && f.type === 'application/pdf')
@@ -681,14 +693,19 @@ function saveConfig() {
   const serial = pages.map((p) => ({
     uid: p.uid,
     pageNumber: p.pageNumber,
-    pdfBase64: btoa(String.fromCharCode(...p.pdfBytes)),
+    pdfBase64: bytesToBase64(p.pdfBytes),
     fields: p.fields.map((f) => ({
-      ...f,
+      id:        f.id,
+      type:      f.type,
+      rect:      { ...f.rect },
+      initialsText: f.initialsText,
       sigBuffer: f.sigBuffer ? Array.from(new Uint8Array(f.sigBuffer)) : undefined,
+      sigType:   f.sigType,
     })),
-  }))
-  localStorage.setItem('pdfSignerConfigV5', JSON.stringify(serial))
-  alert('Configuration saved')
+  }));
+
+  localStorage.setItem('pdfSignerConfigV5', JSON.stringify(serial));
+  alert('Configuration saved');
 }
 
 /**
