@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+// import HomeView from '../views/HomeView.vue'
 import PdfSignerPage from '../views/PdfSignerPage.vue';
 
 const router = createRouter({
@@ -7,11 +7,6 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView,
-    },
-    {
-      path: '/pdf-signer',
       name: 'PdfSigner',
       component: PdfSignerPage,
     },
