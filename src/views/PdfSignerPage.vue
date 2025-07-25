@@ -29,7 +29,6 @@
             />
           </div>
         </div>
-
       </div>
 
       <!-- Fixed footer button -->
@@ -247,6 +246,7 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 import interact from 'interactjs'
 import { v4 as uuidv4 } from 'uuid'
 import type { PageViewport, PDFPageProxy } from 'pdfjs-dist'
+import { set as idbSet, get as idbGet } from 'idb-keyval'
 
 const STORAGE_KEY = 'pdfSignerConfigV6'
 
@@ -335,9 +335,9 @@ watch(layoutLocked, (locked) => {
 
 // Load saved config on mount (Fill phase)
 onMounted(async () => {
-  const raw = localStorage.getItem(STORAGE_KEY)
-  if (raw) {
-    const saved = JSON.parse(raw) as {
+  const saved = await idbGet(STORAGE_KEY)
+  if (saved) {
+    const typed = saved as {
       pages: Array<{
         uid: string
         pageNumber: number
@@ -349,7 +349,8 @@ onMounted(async () => {
         >
       }>
     }
-    saved.pages.forEach((s) => {
+
+    typed.pages.forEach((s) => {
       pages.push({
         uid: s.uid,
         pageNumber: s.pageNumber,
@@ -363,7 +364,8 @@ onMounted(async () => {
         })),
       })
     })
-    layoutLocked.value = true // now in Fill phase
+
+    layoutLocked.value = true
     await nextTick()
     await generateThumbnails()
     await nextTick()
@@ -829,7 +831,7 @@ function cancelField() {
 }
 
 /** --- Save config => locks the layout (after refresh) --- **/
-function saveConfig() {
+async function saveConfig() {
   const serial = {
     pages: pages.map((p) => ({
       uid: p.uid,
@@ -845,8 +847,15 @@ function saveConfig() {
       })),
     })),
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(serial))
-  alert('Configuration saved – please refresh to enter Fill mode.')
+
+  try {
+    await idbSet(STORAGE_KEY, serial)
+    alert('Configuration saved – please refresh to enter Fill mode.')
+    window.location.reload()
+  } catch (err) {
+    console.error('Failed to save to IndexedDB:', err)
+    alert('Failed to save configuration.')
+  }
 }
 
 /** --- Scroll helper --- **/
