@@ -1499,4 +1499,76 @@ hr {
 .hidden-input {
   display: none;
 }
+
+
+
+/* Responsive styles */
+
+/* Responsive layout improvements */
+@media (max-width: 1024px) {
+  .pdf-signer-container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .thumbs-col,
+  .toolbar-col {
+    width: 100%;
+    height: auto;
+    border: none;
+    flex-direction: row;
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+
+  .thumb-wrapper {
+    flex: 0 0 auto;
+    width: 80px;
+    margin-right: 0.5rem;
+  }
+
+  .canvas-col {
+    margin: 0;
+    width: 100%;
+    order: 2;
+  }
+
+  .toolbar-col {
+    order: 3;
+    border-top: 1px solid #ddd;
+    padding: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+  }
+
+  .field-card {
+    flex: 0 0 auto;
+  }
+
+  .action-btn {
+    font-size: 14px;
+    padding: 0.5rem 0.75rem;
+    margin: 0.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .field-panel {
+    width: 95%;
+    min-width: unset;
+    padding: 0.75rem;
+  }
+
+  .draw-pad {
+    width: 100%;
+    height: auto;
+  }
+
+  .sig-preview {
+    padding: 0.5rem;
+    min-height: 160px;
+  }
+}
+
 </style>
