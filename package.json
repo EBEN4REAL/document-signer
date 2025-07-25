@@ -19,6 +19,7 @@
   "dependencies": {
     "@docuseal/vue": "^1.0.48",
     "@types/jsonwebtoken": "^9.0.10",
+    "idb-keyval": "^6.2.2",
     "interactjs": "^1.10.27",
     "jsonwebtoken": "^9.0.2",
     "pdf-lib": "^1.17.1",
