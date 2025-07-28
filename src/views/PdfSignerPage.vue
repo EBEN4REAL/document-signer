@@ -1,4 +1,14 @@
 <template>
+  <div class="document-name">
+    <input
+      ref="documentNameInput"
+      v-model="documentName"
+      @blur="idbSet(NAME_KEY, documentName)"
+      placeholder="Document name"
+      class="document-name-input"
+    />
+  </div>
+
   <div class="pdf-signer-container" :class="{ locked: layoutLocked }">
     <!-- Left thumbnails & “Add PDF” -->
     <div class="col thumbs-col">
@@ -12,14 +22,10 @@
         >
           <img :src="p.thumbnailUrl" class="thumb" />
 
-          <!-- Improved overlay with Replace + Close -->
+          <!-- Overlay -->
           <div class="thumb-overlay improved">
-            <!-- Delete page is always allowed (doesn't affect your 6 rules) -->
             <button class="thumb-close" @click.stop="removePage(idx)">✕</button>
-
             <button class="thumb-replace-pill" @click.stop="triggerReplace(idx)">REPLACE</button>
-
-            <!-- Hidden input actually doing the replace -->
             <input
               :ref="(el) => (replaceInputs[idx] = el as HTMLInputElement | null)"
               type="file"
@@ -28,6 +34,9 @@
               @change="onReplacePdfUpload(idx, $event)"
             />
           </div>
+
+          <!-- New filename display -->
+          <div class="thumb-filename" :title="p.fileName">{{ p.fileName }}</div>
         </div>
       </div>
 
@@ -249,6 +258,7 @@ import type { PageViewport, PDFPageProxy } from 'pdfjs-dist'
 import { set as idbSet, get as idbGet } from 'idb-keyval'
 
 const STORAGE_KEY = 'pdfSignerConfigV6'
+const NAME_KEY = 'pdfSignerDocumentNameV6'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.js',
@@ -278,6 +288,7 @@ interface PageData {
   imageData: ImageData | null
   thumbnailUrl: string
   fields: Field[]
+  fileName: string
 }
 type RenderTask = ReturnType<PDFPageProxy['render']>
 
@@ -301,6 +312,9 @@ const drawPad = ref<HTMLCanvasElement | null>(null)
 const canvasCol = ref<HTMLDivElement | null>(null)
 
 const isDragOver = ref(false)
+
+const documentName = ref('')
+const documentNameInput = ref<HTMLInputElement | null>(null)
 
 /** --- Helpers & Constants --- **/
 const PADDING = 6,
@@ -335,13 +349,19 @@ watch(layoutLocked, (locked) => {
 
 // Load saved config on mount (Fill phase)
 onMounted(async () => {
+  const savedName = await idbGet(NAME_KEY)
+  if (typeof savedName === 'string') {
+    documentName.value = savedName
+  }
   const saved = await idbGet(STORAGE_KEY)
+  console.log('saved => 339', saved)
   if (saved) {
     const typed = saved as {
       pages: Array<{
         uid: string
         pageNumber: number
         pdfBase64: string
+        fileName?: string // ← add this line
         fields: Array<
           Omit<Field, 'sigBuffer'> & {
             sigBuffer?: number[]
@@ -362,7 +382,20 @@ onMounted(async () => {
           ...f,
           sigBuffer: f.sigBuffer ? new Uint8Array(f.sigBuffer).buffer : undefined,
         })),
+        fileName: s.fileName ?? '', // ← default fallback
       })
+      // pages.push({
+      //   uid: s.uid,
+      //   pageNumber: s.pageNumber,
+      //   pdfBytes: Uint8Array.from(atob(s.pdfBase64), (c) => c.charCodeAt(0)),
+      //   viewport: null,
+      //   imageData: null,
+      //   thumbnailUrl: '',
+      //   fields: s.fields.map((f) => ({
+      //     ...f,
+      //     sigBuffer: f.sigBuffer ? new Uint8Array(f.sigBuffer).buffer : undefined,
+      //   })),
+      // })
     })
 
     layoutLocked.value = true
@@ -476,6 +509,7 @@ async function appendPdfs(files: FileList) {
         imageData: null,
         thumbnailUrl: '',
         fields: [],
+        fileName: file.name, // ← here
       })
     }
   }
@@ -484,6 +518,11 @@ async function appendPdfs(files: FileList) {
 async function onPdfUpload(e: Event) {
   const inp = e.target as HTMLInputElement
   if (!inp.files?.length) return
+  if (inp.files.length === 1) {
+    documentName.value = inp.files[0].name.replace(/\.[^/.]+$/, '')
+  } else {
+    documentName.value = `Document_${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+  }
 
   isLoading.value = true
   try {
@@ -504,6 +543,12 @@ async function onPdfUpload(e: Event) {
 async function onAddPdfUpload(e: Event) {
   const inp = e.target as HTMLInputElement
   if (!inp.files?.length) return
+  if (inp.files.length === 1) {
+    documentName.value = inp.files[0].name.replace(/\.[^/.]+$/, '')
+  } else {
+    documentName.value = `Document_${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+  }
+
   layoutLocked.value = false // still in layout phase
   await appendPdfs(inp.files)
   inp.value = ''
@@ -516,6 +561,11 @@ async function onAddPdfUpload(e: Event) {
 async function onDropDocuments(e: DragEvent) {
   const files = e.dataTransfer?.files
   if (!files?.length) return
+  if (files.length === 1) {
+    documentName.value = files[0].name.replace(/\.[^/.]+$/, '')
+  } else {
+    documentName.value = `Document_${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+  }
 
   isLoading.value = true
   try {
@@ -837,6 +887,7 @@ async function saveConfig() {
       uid: p.uid,
       pageNumber: p.pageNumber,
       pdfBase64: bytesToBase64(p.pdfBytes),
+      fileName: p.fileName,
       fields: p.fields.map((f) => ({
         id: f.id,
         type: f.type,
@@ -850,6 +901,7 @@ async function saveConfig() {
 
   try {
     await idbSet(STORAGE_KEY, serial)
+    await idbSet(NAME_KEY, documentName.value)
     alert('Configuration saved – please refresh to enter Fill mode.')
     window.location.reload()
   } catch (err) {
@@ -967,10 +1019,10 @@ async function signPdf() {
     window.open(url, '_blank', 'noopener,noreferrer')
 
     // (optional) also trigger download:
-    // const a = document.createElement('a')
-    // a.href = url
-    // a.download = `signed_${new Date().toISOString().slice(0, 10)}.pdf`
-    // a.click()
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${documentName.value}_${new Date().toISOString().slice(0, 10)}.pdf`
+    a.click()
 
     setTimeout(() => URL.revokeObjectURL(url), 10000)
   } catch (err) {
@@ -1500,6 +1552,42 @@ hr {
   display: none;
 }
 
+.document-name {
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  padding: 0.5rem;
+}
+
+.document-name-input {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  border: none;
+  background: transparent;
+  text-align: center;
+  outline: none;
+  width: 50%;
+  margin: 0 auto;
+}
+
+.document-name-input:focus {
+  border-bottom: 2px solid #3b0f5c;
+  box-shadow: none;
+}
+
+.thumb-filename {
+  font-size: 12px;
+  color: #444;
+  padding: 4px 6px;
+  text-align: center;
+  word-break: break-word;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 
 /* Responsive styles */
@@ -1570,5 +1658,4 @@ hr {
     min-height: 160px;
   }
 }
-
 </style>
