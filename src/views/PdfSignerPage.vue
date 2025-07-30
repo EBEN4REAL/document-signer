@@ -384,18 +384,6 @@ onMounted(async () => {
         })),
         fileName: s.fileName ?? '', // ← default fallback
       })
-      // pages.push({
-      //   uid: s.uid,
-      //   pageNumber: s.pageNumber,
-      //   pdfBytes: Uint8Array.from(atob(s.pdfBase64), (c) => c.charCodeAt(0)),
-      //   viewport: null,
-      //   imageData: null,
-      //   thumbnailUrl: '',
-      //   fields: s.fields.map((f) => ({
-      //     ...f,
-      //     sigBuffer: f.sigBuffer ? new Uint8Array(f.sigBuffer).buffer : undefined,
-      //   })),
-      // })
     })
 
     layoutLocked.value = true
