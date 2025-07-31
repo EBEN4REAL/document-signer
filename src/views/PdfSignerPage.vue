@@ -382,7 +382,7 @@ onMounted(async () => {
           ...f,
           sigBuffer: f.sigBuffer ? new Uint8Array(f.sigBuffer).buffer : undefined,
         })),
-        fileName: s.fileName ?? '', // ← default fallback
+        fileName: s.fileName ?? '',
       })
     })
 
@@ -1510,7 +1510,7 @@ hr {
 
 .dropzone.drag-over,
 .dropzone:hover {
-  border-color: #9ca3af; /* a bit darker gray on hover/drag */
+  border-color: #9ca3af;
   background: #fafafa;
 }
 
@@ -1518,7 +1518,7 @@ hr {
   width: 48px;
   height: 48px;
   margin-bottom: 18px;
-  color: #111; /* black like the screenshot */
+  color: #111; 
 }
 
 .dz-title {
@@ -1532,7 +1532,7 @@ hr {
 .dz-subtitle {
   margin: 0;
   font-size: 16px;
-  color: #6b7280; /* muted gray */
+  color: #6b7280;
 }
 
 /* keep your hidden input utility */
