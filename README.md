@@ -1,61 +1,35 @@
-# docusign-replica
 
-This template should help get you started developing with Vue 3 in Vite.
+# 📄 PDF Signer — Drag-and-Drop Signature Tool (Vue 3)
 
-## Recommended IDE Setup
+A browser-based tool built with **Vue 3**, **pdf-lib**, **PDF.js**, and **Interact.js** that allows users to **upload PDFs**, drag-and-drop **signature or initials fields**, and generate a newly **signed PDF document — no backend required**.
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
 
-## Type Support for `.vue` Imports in TS
+### Snapshot
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+<img width="1280" height="767" alt="image" src="https://github.com/user-attachments/assets/ffdadb25-1095-4eb0-a666-6f3776f4aca7" />
 
-## Customize configuration
+<img width="1280" height="769" alt="image" src="https://github.com/user-attachments/assets/0e3dda25-5acb-463d-a290-3dd07f35abc8" />
 
-See [Vite Configuration Reference](https://vite.dev/config/).
 
-## Project Setup
+DEMO: https://docs-signer.netlify.app/
 
-```sh
-npm install
-```
 
-### Compile and Hot-Reload for Development
+---
 
-```sh
-npm run dev
-```
+### ✨ Key Features
 
-### Type-Check, Compile and Minify for Production
+* Upload one or multiple **PDF files** (or images)
+* Drag-and-drop **Signature** and **Initials** fields onto pages
+* **Drag, resize, delete, or replace** fields during layout phase
+* **Draw or upload signature images**, or type initials in the fill phase
+* Saves configuration to **IndexedDB** for session persistence
+* Produces a **flattened, signed PDF** using `pdf-lib`
 
-```sh
-npm run build
-```
+---
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+### 🧠 How it Works
 
-```sh
-npm run test:unit
-```
-
-### Run End-to-End Tests with [Cypress](https://www.cypress.io/)
-
-```sh
-npm run test:e2e:dev
-```
-
-This runs the end-to-end tests against the Vite development server.
-It is much faster than the production build.
-
-But it's still recommended to test the production build with `test:e2e` before deploying (e.g. in CI environments):
-
-```sh
-npm run build
-npm run test:e2e
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+1. **Layout Phase** → Upload PDFs and visually place fields
+2. **Save Config** → Locks the layout for filling
+3. **Fill Phase** → Add signatures/initials to fields
+4. **Complete** → Generates and downloads a signed PDF
