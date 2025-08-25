@@ -1,38 +1,23 @@
 <template>
   <div class="document-name">
-    <input
-      ref="documentNameInput"
-      v-model="documentName"
-      @blur="idbSet(NAME_KEY, documentName)"
-      placeholder="Document name"
-      class="document-name-input"
-    />
+    <input ref="documentNameInput" v-model="documentName" @blur="idbSet(NAME_KEY, documentName)"
+      placeholder="Document name" class="document-name-input" />
   </div>
 
   <div class="pdf-signer-container" :class="{ locked: layoutLocked }">
-    <!-- Left thumbnails & “Add PDF” -->
+    <!-- Left thumbnails & "Add PDF" -->
     <div class="col thumbs-col">
       <!-- Scrollable thumbnails list -->
       <div class="thumbs-scroll">
-        <div
-          v-for="(p, idx) in pages"
-          :key="p.uid"
-          class="thumb-wrapper"
-          @click="scrollToPage(idx)"
-        >
+        <div v-for="(p, idx) in pages" :key="p.uid" class="thumb-wrapper" @click="scrollToPage(idx)">
           <img :src="p.thumbnailUrl" class="thumb" />
 
           <!-- Overlay -->
           <div class="thumb-overlay improved">
             <button class="thumb-close" @click.stop="removePage(idx)">✕</button>
             <button class="thumb-replace-pill" @click.stop="triggerReplace(idx)">REPLACE</button>
-            <input
-              :ref="(el) => (replaceInputs[idx] = el as HTMLInputElement | null)"
-              type="file"
-              accept="application/pdf"
-              class="hidden-input"
-              @change="onReplacePdfUpload(idx, $event)"
-            />
+            <input :ref="(el) => (replaceInputs[idx] = el as HTMLInputElement | null)" type="file"
+              accept="application/pdf" class="hidden-input" @change="onReplacePdfUpload(idx, $event)" />
           </div>
 
           <!-- New filename display -->
@@ -44,13 +29,7 @@
       <div v-if="pages.length" class="thumbs-footer fixed-footer">
         <label class="add-doc-btn big-pill">
           ⬆ ADD DOCUMENT
-          <input
-            type="file"
-            accept="application/pdf"
-            multiple
-            class="hidden-input"
-            @change="onAddPdfUpload"
-          />
+          <input type="file" accept="application/pdf" multiple class="hidden-input" @change="onAddPdfUpload" />
         </label>
       </div>
     </div>
@@ -59,30 +38,16 @@
     <div class="col canvas-col" ref="canvasCol">
       <div v-if="!pages.length" class="initial-upload-container">
         <div v-if="isLoading" class="loader">Loading PDF...</div>
-        <label
-          v-else
-          class="dropzone"
-          :class="{ 'drag-over': isDragOver }"
-          @dragover.prevent="isDragOver = true"
-          @dragleave.prevent="isDragOver = false"
-          @drop.prevent="
+        <label v-else class="dropzone" :class="{ 'drag-over': isDragOver }" @dragover.prevent="isDragOver = true"
+          @dragleave.prevent="isDragOver = false" @drop.prevent="
             (e) => {
               isDragOver = false
               onDropDocuments(e)
             }
-          "
-        >
+          ">
           <!-- Cloud upload icon -->
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            class="dz-icon"
-          >
-            <path
-              d="M3 15a4 4 0 0 0 4 4h11a4 4 0 0 0 1-7.874A5 5 0 0 0 9 9.5c0 .168.006.335.02.5A4 4 0 0 0 3 15z"
-            />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="dz-icon">
+            <path d="M3 15a4 4 0 0 0 4 4h11a4 4 0 0 0 1-7.874A5 5 0 0 0 9 9.5c0 .168.006.335.02.5A4 4 0 0 0 3 15z" />
             <path d="M12 12v9" />
             <path d="m8 16 4-4 4 4" />
           </svg>
@@ -90,39 +55,22 @@
           <h2 class="dz-title">Add documents</h2>
           <p class="dz-subtitle">Click to upload or drag and drop files</p>
 
-          <input
-            type="file"
-            accept="application/pdf,image/*"
-            multiple
-            class="hidden-input"
-            @change="onPdfUpload"
-          />
+          <input type="file" accept="application/pdf,image/*" multiple class="hidden-input" @change="onPdfUpload" />
         </label>
       </div>
 
       <div v-for="(p, idx) in pages" :key="p.uid" class="page-wrapper">
-        <canvas
-          :ref="(el) => (pageCanvases[idx] = el as HTMLCanvasElement | null)"
-          class="pdf-canvas"
-          @dragover.prevent
-          @drop="onDropField(idx, $event)"
-        />
+        <canvas :ref="(el) => (pageCanvases[idx] = el as HTMLCanvasElement | null)" class="pdf-canvas" @dragover.prevent
+          @drop="onDropField(idx, $event)" />
 
         <!-- Interactive overlays -->
-        <div
-          v-for="f in p.fields"
-          :key="f.id"
-          class="field-overlay"
-          :class="[f.type, { locked: layoutLocked }]"
-          :data-id="f.id"
-          :style="{
+        <div v-for="f in p.fields" :key="f.id" class="field-overlay" :class="[f.type, { locked: layoutLocked }]"
+          :data-id="f.id" :style="{
             left: f.rect.x + 'px',
             top: f.rect.y + 'px',
             width: f.rect.width + 'px',
             height: f.rect.height + 'px',
-          }"
-          @mousedown.stop="onFieldMouseDown(idx, f.id)"
-        >
+          }" @mousedown.stop="onFieldMouseDown(idx, f.id)">
           <!-- delete small x (ONLY in layout mode) -->
           <button v-if="!layoutLocked" class="field-delete" @click.stop="removeField(idx, f.id)">
             ✕
@@ -137,6 +85,11 @@
           <span v-if="f.type === 'initial' && f.initialsText" class="initial-text">
             {{ f.initialsText }}
           </span>
+
+          <!-- Timestamp display below signature if enabled -->
+          <div v-if="f.type === 'signature' && f.includeTimestamp && f.timestamp" class="timestamp-display-overlay">
+            {{ formatSignedText(f.timestamp) }}
+          </div>
         </div>
       </div>
     </div>
@@ -144,22 +97,14 @@
     <!-- Toolbar -->
     <div class="col toolbar-col">
       <div class="field-selector">
-        <div
-          class="field-card"
-          :class="{ disabled: layoutLocked }"
-          :draggable="!layoutLocked"
-          @dragstart="(e) => onDragStart(e, 'signature')"
-        >
+        <div class="field-card" :class="{ disabled: layoutLocked }" :draggable="!layoutLocked"
+          @dragstart="(e) => onDragStart(e, 'signature')">
           <span class="drag-handle">⋮⋮</span>
           <span class="field-icon">✒️</span>
           <span class="field-label">Signature</span>
         </div>
-        <div
-          class="field-card"
-          :class="{ disabled: layoutLocked }"
-          :draggable="!layoutLocked"
-          @dragstart="(e) => onDragStart(e, 'initial')"
-        >
+        <div class="field-card" :class="{ disabled: layoutLocked }" :draggable="!layoutLocked"
+          @dragstart="(e) => onDragStart(e, 'initial')">
           <span class="drag-handle">⋮⋮</span>
           <span class="field-icon">🔤</span>
           <span class="field-label">Initials</span>
@@ -168,12 +113,7 @@
 
       <hr />
 
-      <button
-        class="action-btn"
-        :disabled="layoutLocked"
-        :class="{ disabled: layoutLocked }"
-        @click="saveConfig"
-      >
+      <button class="action-btn" :disabled="layoutLocked" :class="{ disabled: layoutLocked }" @click="saveConfig">
         💾 Save Config
       </button>
       <button class="action-btn primary" @click="signPdf">Complete</button>
@@ -187,38 +127,37 @@
       </div>
 
       <div v-if="currentField.type === 'signature'" class="sig-config">
+        <!-- Date/Time Stamp Option -->
+        <div class="timestamp-option">
+          <label class="checkbox-wrapper">
+            <input type="checkbox" v-model="currentField.includeTimestamp" @change="onTimestampToggle" />
+            <span class="checkbox-label">Include date and time stamp below signature</span>
+          </label>
+        </div>
+
         <div class="sig-actions">
           <button class="pill" @click="startDrawingSig">✍ DRAW</button>
           <label class="pill">
             ⬆ UPLOAD
-            <input
-              ref="sigInput"
-              type="file"
-              accept="image/png,image/jpeg"
-              class="hidden-input"
-              @change="onSigSelected"
-            />
+            <input ref="sigInput" type="file" accept="image/png,image/jpeg" class="hidden-input"
+              @change="onSigSelected" />
           </label>
           <button class="pill" @click="clearSignature">↺ CLEAR</button>
         </div>
 
         <!-- Always visible preview box -->
         <div class="sig-preview">
-          <canvas
-            v-if="drawingSig"
-            ref="drawPad"
-            class="draw-pad"
-            width="600"
-            height="200"
-          ></canvas>
+          <canvas v-if="drawingSig" ref="drawPad" class="draw-pad" width="600" height="200"></canvas>
 
-          <img
-            v-else-if="currentField.sigBuffer"
-            :src="getSigUrl(currentField)"
-            class="preview-img"
-          />
+          <img v-else-if="currentField.sigBuffer" :src="getSigUrl(currentField)" class="preview-img" />
 
           <div v-else class="sig-placeholder">No signature yet. Draw or upload above.</div>
+        </div>
+
+        <!-- Timestamp preview -->
+        <div v-if="currentField.includeTimestamp" class="timestamp-preview">
+          <small class="timestamp-label">Date/Time stamp will appear as:</small>
+          <div class="timestamp-sample">{{ formatSignedText(new Date()) }}</div>
         </div>
 
         <!-- faint buttons for the draw pad only -->
@@ -231,12 +170,7 @@
       <div v-else class="initials-config">
         <label class="initials-label">
           Initials
-          <input
-            v-model="currentField.initialsText"
-            maxlength="3"
-            placeholder="EJ"
-            class="initials-input"
-          />
+          <input v-model="currentField.initialsText" maxlength="3" placeholder="EJ" class="initials-input" />
         </label>
       </div>
 
@@ -257,8 +191,9 @@ import { v4 as uuidv4 } from 'uuid'
 import type { PageViewport, PDFPageProxy } from 'pdfjs-dist'
 import { set as idbSet, get as idbGet } from 'idb-keyval'
 
-const STORAGE_KEY = 'pdfSignerConfigV6'
-const NAME_KEY = 'pdfSignerDocumentNameV6'
+const STORAGE_KEY = 'pdfSignerConfigV7'
+const NAME_KEY = 'pdfSignerDocumentNameV7'
+const signerName = "Oprah Winfrey"
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.js',
@@ -279,6 +214,8 @@ interface Field {
   initialsText?: string
   sigBuffer?: ArrayBuffer
   sigType?: 'png' | 'jpg'
+  includeTimestamp?: boolean
+  timestamp?: Date
 }
 interface PageData {
   uid: string
@@ -324,9 +261,27 @@ const cloneBytes = (u: Uint8Array) => new Uint8Array(u)
 const getSigUrl = (f: Field) =>
   f.sigBuffer
     ? URL.createObjectURL(
-        new Blob([f.sigBuffer], { type: f.sigType === 'png' ? 'image/png' : 'image/jpeg' }),
-      )
+      new Blob([f.sigBuffer], { type: f.sigType === 'png' ? 'image/png' : 'image/jpeg' }),
+    )
     : ''
+
+// Format timestamp for display
+const formatSignedText = (date: Date) => {
+  return `Electronically signed by ${name} ${date.toLocaleDateString('en-US')} at ${date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  })}`
+}
+
+
+// Handle timestamp toggle
+const onTimestampToggle = () => {
+  if (currentField.value && currentField.value.includeTimestamp) {
+    currentField.value.timestamp = new Date()
+  } else if (currentField.value) {
+    currentField.value.timestamp = undefined
+  }
+}
 
 // reset refs on pages.length change
 watch(
@@ -354,43 +309,57 @@ onMounted(async () => {
     documentName.value = savedName
   }
   const saved = await idbGet(STORAGE_KEY)
-  console.log('saved => 339', saved)
+
   if (saved) {
-    const typed = saved as {
-      pages: Array<{
-        uid: string
-        pageNumber: number
-        pdfBase64: string
-        fileName?: string // ← add this line
-        fields: Array<
-          Omit<Field, 'sigBuffer'> & {
-            sigBuffer?: number[]
-          }
-        >
-      }>
-    }
+    try {
+      const typed = saved as {
+        pages: Array<{
+          uid: string
+          pageNumber: number
+          pdfBase64: string
+          fileName?: string
+          fields: Array<
+            Omit<Field, 'sigBuffer' | 'timestamp'> & {
+              sigBuffer?: number[]
+              timestamp?: string
+            }
+          >
+        }>
+      }
 
-    typed.pages.forEach((s) => {
-      pages.push({
-        uid: s.uid,
-        pageNumber: s.pageNumber,
-        pdfBytes: Uint8Array.from(atob(s.pdfBase64), (c) => c.charCodeAt(0)),
-        viewport: null,
-        imageData: null,
-        thumbnailUrl: '',
-        fields: s.fields.map((f) => ({
-          ...f,
-          sigBuffer: f.sigBuffer ? new Uint8Array(f.sigBuffer).buffer : undefined,
-        })),
-        fileName: s.fileName ?? '',
+      // Clear existing pages
+      pages.splice(0)
+
+      // Add restored pages
+      typed.pages.forEach((s) => {
+        const pageData: PageData = {
+          uid: s.uid,
+          pageNumber: s.pageNumber,
+          pdfBytes: Uint8Array.from(atob(s.pdfBase64), (c) => c.charCodeAt(0)),
+          viewport: null,
+          imageData: null,
+          thumbnailUrl: '',
+          fields: s.fields.map((f) => ({
+            ...f,
+            sigBuffer: f.sigBuffer ? new Uint8Array(f.sigBuffer).buffer : undefined,
+            timestamp: f.timestamp ? new Date(f.timestamp) : undefined,
+          })),
+          fileName: s.fileName ?? '',
+        }
+        pages.push(pageData)
       })
-    })
 
-    layoutLocked.value = true
-    await nextTick()
-    await generateThumbnails()
-    await nextTick()
-    await renderAllPages()
+      layoutLocked.value = true
+      await nextTick()
+      await generateThumbnails()
+      await nextTick()
+      await renderAllPages()
+
+      console.log('Configuration restored successfully:', pages)
+    } catch (error) {
+      console.error('Error restoring configuration:', error)
+      alert('Failed to restore saved configuration')
+    }
   }
 })
 
@@ -497,7 +466,7 @@ async function appendPdfs(files: FileList) {
         imageData: null,
         thumbnailUrl: '',
         fields: [],
-        fileName: file.name, // ← here
+        fileName: file.name,
       })
     }
   }
@@ -608,7 +577,7 @@ async function renderPage(idx: number) {
   if (prev)
     try {
       prev.cancel()
-    } catch {}
+    } catch { }
   const p = pages[idx]
   const pdf = await pdfjsLib.getDocument({ data: cloneBytes(p.pdfBytes) }).promise
   const pg = await pdf.getPage(p.pageNumber)
@@ -854,6 +823,12 @@ function clearSignature() {
 
 function applyField() {
   if (!currentField.value) return
+
+  // If timestamp is enabled and this is a signature, set the timestamp to current time
+  if (currentField.value.type === 'signature' && currentField.value.includeTimestamp) {
+    currentField.value.timestamp = new Date()
+  }
+
   const idx = pages.findIndex((pg) => pg.fields.some((f) => f.id === currentField.value!.id))
   if (idx < 0) return
   const list = pages[idx].fields
@@ -883,6 +858,8 @@ async function saveConfig() {
         initialsText: f.initialsText,
         sigBuffer: f.sigBuffer ? Array.from(new Uint8Array(f.sigBuffer)) : undefined,
         sigType: f.sigType,
+        includeTimestamp: f.includeTimestamp,
+        timestamp: f.timestamp ? f.timestamp.toISOString() : undefined,
       })),
     })),
   }
@@ -984,6 +961,21 @@ async function signPdf() {
               ? await outPdf.embedPng(field.sigBuffer)
               : await outPdf.embedJpg(field.sigBuffer)
           outPage.drawImage(img, { x, y, width: w, height: h })
+
+          // Add timestamp below signature if enabled
+          if (field.includeTimestamp && field.timestamp) {
+            const timestampText = formatSignedText(field.timestamp)
+            const timestampSize = Math.min(w * 0.08, 10) // Smaller font for timestamp
+            const timestampY = y - timestampSize - 4 // Position below signature with some spacing
+
+            outPage.drawText(timestampText, {
+              x: x,
+              y: Math.max(timestampY, 0), // Ensure we don't go below page boundary
+              size: timestampSize,
+              font,
+              color: rgb(0.4, 0.4, 0.4), // Gray color for timestamp
+            })
+          }
         } else if (field.type === 'initial' && field.initialsText) {
           const txt = field.initialsText.trim()
           let size = Math.min(h * 0.7, 24)
@@ -999,8 +991,15 @@ async function signPdf() {
       }
     }
 
-    const pdfBytes = await outPdf.save()
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+    const pdfBytes = await outPdf.save();
+
+    const ab = pdfBytes.buffer.slice(
+      pdfBytes.byteOffset,
+      pdfBytes.byteOffset + pdfBytes.byteLength
+    ) as ArrayBuffer;
+
+    const blob = new Blob([ab], { type: 'application/pdf' });
+
     const url = URL.createObjectURL(blob)
 
     // open in new tab
@@ -1042,6 +1041,24 @@ async function onReplacePdfUpload(idx: number, e: Event) {
   await generateThumbnail(idx)
   await renderAllPages()
 }
+
+function debugSavedData() {
+  console.log('Pages:', pages.length)
+  pages.forEach((page, pageIndex) => {
+    console.log(`Page ${pageIndex}:`, page.fileName)
+    page.fields.forEach((field, fieldIndex) => {
+      console.log(`  Field ${fieldIndex}:`, {
+        type: field.type,
+        hasSig: !!field.sigBuffer,
+        includeTimestamp: field.includeTimestamp,
+        timestamp: field.timestamp
+      })
+    })
+  })
+}
+
+// Call this after loading data
+// debugSavedData()
 </script>
 
 <style scoped>
@@ -1057,6 +1074,7 @@ async function onReplacePdfUpload(idx: number, e: Event) {
     Roboto,
     sans-serif;
 }
+
 .col {
   padding: 1rem;
   box-sizing: border-box;
@@ -1071,11 +1089,13 @@ async function onReplacePdfUpload(idx: number, e: Event) {
   display: flex;
   flex-direction: column;
 }
+
 .thumbs-scroll {
   flex: 1 1 auto;
   overflow-y: auto;
   padding-right: 4px;
 }
+
 .fixed-footer {
   flex: 0 0 auto;
   position: sticky;
@@ -1084,6 +1104,7 @@ async function onReplacePdfUpload(idx: number, e: Event) {
   padding-top: 0.75rem;
   border-top: 1px solid #eee;
 }
+
 .thumb-wrapper {
   position: relative;
   margin-bottom: 0.75rem;
@@ -1092,10 +1113,12 @@ async function onReplacePdfUpload(idx: number, e: Event) {
   border-radius: 6px;
   overflow: hidden;
 }
+
 .thumb {
   width: 100%;
   display: block;
 }
+
 .thumb-overlay.improved {
   position: absolute;
   inset: 0;
@@ -1105,10 +1128,12 @@ async function onReplacePdfUpload(idx: number, e: Event) {
   opacity: 0;
   transition: opacity 0.15s;
 }
+
 .thumb-wrapper:hover .thumb-overlay.improved {
   opacity: 1;
   background: rgba(255, 255, 255, 0.6);
 }
+
 .thumb-close {
   position: absolute;
   top: 6px;
@@ -1123,6 +1148,7 @@ async function onReplacePdfUpload(idx: number, e: Event) {
   line-height: 24px;
   text-align: center;
 }
+
 .thumb-replace-pill {
   position: absolute;
   top: 6px;
@@ -1137,13 +1163,16 @@ async function onReplacePdfUpload(idx: number, e: Event) {
   font-weight: 600;
   cursor: pointer;
 }
+
 .hidden-input {
   display: none;
 }
+
 .thumbs-footer {
   text-align: center;
   margin-top: 1rem;
 }
+
 .big-pill {
   display: inline-flex;
   align-items: center;
@@ -1164,10 +1193,12 @@ async function onReplacePdfUpload(idx: number, e: Event) {
   overflow-y: auto;
   margin: 0 1rem;
 }
+
 .page-wrapper {
   position: relative;
   margin-bottom: 2rem;
 }
+
 .pdf-canvas {
   width: 100% !important;
   height: auto !important;
@@ -1183,13 +1214,16 @@ async function onReplacePdfUpload(idx: number, e: Event) {
   background: rgba(106, 42, 134, 0.08);
   box-sizing: border-box;
   border-radius: 4px;
-  cursor: pointer; /* <- rule #4 */
+  cursor: pointer;
+  /* <- rule #4 */
   touch-action: none;
 }
+
 .field-overlay.locked {
   /* when locked, just for clarity if you want a slightly different look */
   border-style: solid;
 }
+
 .field-delete {
   position: absolute;
   top: -10px;
@@ -1206,6 +1240,7 @@ async function onReplacePdfUpload(idx: number, e: Event) {
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
+
 .field-overlay.initial::before {
   content: 'Initials';
   position: absolute;
@@ -1218,6 +1253,7 @@ async function onReplacePdfUpload(idx: number, e: Event) {
   border-radius: 2px;
   font-size: 10px;
 }
+
 .sig-img {
   position: absolute;
   top: 0;
@@ -1226,6 +1262,7 @@ async function onReplacePdfUpload(idx: number, e: Event) {
   height: 100%;
   object-fit: contain;
 }
+
 .sig-icon {
   position: absolute;
   top: 50%;
@@ -1233,6 +1270,7 @@ async function onReplacePdfUpload(idx: number, e: Event) {
   transform: translate(-50%, -50%);
   font-size: 1.2em;
 }
+
 .initial-text {
   position: absolute;
   top: 50%;
@@ -1251,12 +1289,14 @@ async function onReplacePdfUpload(idx: number, e: Event) {
   flex-direction: column;
   padding: 1rem;
 }
+
 .field-selector {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   margin-bottom: 1rem;
 }
+
 .field-card {
   display: flex;
   align-items: center;
@@ -1267,21 +1307,26 @@ async function onReplacePdfUpload(idx: number, e: Event) {
   background: #fafafa;
   cursor: grab;
 }
+
 .disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
 .field-card:hover {
   background: white;
   border-color: #bbb;
 }
+
 .drag-handle {
   font-size: 1rem;
   color: #888;
 }
+
 .field-icon {
   font-size: 1.25rem;
 }
+
 .field-label {
   font-size: 0.9rem;
   font-weight: 500;
@@ -1292,6 +1337,7 @@ hr {
   border: none;
   border-top: 1px solid #eee;
 }
+
 .action-btn {
   width: 100%;
   padding: 0.65rem;
@@ -1302,14 +1348,17 @@ hr {
   cursor: pointer;
   font-weight: 600;
 }
+
 .action-btn.primary {
   background: #3b0f5c;
   border-color: #3b0f5c;
   color: #fff;
 }
+
 .action-btn:hover {
   background: #e0e0e0;
 }
+
 .action-btn:last-of-type {
   margin-bottom: 0;
 }
@@ -1329,15 +1378,18 @@ hr {
   z-index: 1000;
   min-width: 640px;
 }
+
 .field-panel.active {
   display: block;
 }
+
 .panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.75rem;
 }
+
 .panel-close {
   background: transparent;
   border: none;
@@ -1345,11 +1397,13 @@ hr {
   cursor: pointer;
   color: #3b0f5c;
 }
+
 .sig-actions {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
 }
+
 .pill {
   border-radius: 999px;
   padding: 0.4rem 0.9rem;
@@ -1359,10 +1413,12 @@ hr {
   cursor: pointer;
   font-weight: 600;
 }
+
 .pill.success {
   border-color: #2e7d32;
   color: #2e7d32;
 }
+
 .pill.danger {
   border-color: #c62828;
   color: #c62828;
@@ -1387,6 +1443,7 @@ hr {
   justify-content: center;
   min-height: 200px;
 }
+
 .draw-pad {
   border: 1px solid #ccc;
   background: transparent !important;
@@ -1395,27 +1452,32 @@ hr {
   margin-bottom: 0.5rem;
   border-radius: 8px;
 }
+
 .draw-actions {
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
 }
+
 .preview-img {
   max-width: 100%;
   max-height: 200px;
   display: block;
 }
+
 .initials-config {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
+
 .initials-label {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
   font-weight: 600;
 }
+
 .initials-input {
   border: 2px solid #3b0f5c33;
   border-radius: 8px;
@@ -1423,6 +1485,7 @@ hr {
   font-size: 1rem;
   width: 120px;
 }
+
 .panel-actions {
   display: flex;
   gap: 0.5rem;
@@ -1439,12 +1502,14 @@ hr {
   font-size: 1.2rem;
   color: #555;
 }
+
 .initial-upload-container {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100%;
 }
+
 .drop-area {
   width: 100%;
   background: #f5f2f2;
@@ -1460,14 +1525,17 @@ hr {
     background 0.2s,
     border-color 0.2s;
 }
+
 .drop-area:hover {
   background: #fafafa;
   border-color: #bbb;
 }
+
 .drop-icon {
   font-size: 3rem;
   margin-bottom: 1rem;
 }
+
 .drop-text {
   font-size: 1.25rem;
   color: #666;
@@ -1493,8 +1561,10 @@ hr {
 .dropzone {
   width: 100%;
   min-height: 360px;
-  border: 2px dashed #e5e7eb; /* light gray dashed */
-  border-radius: 12px; /* rounded corners like the shot */
+  border: 2px dashed #e5e7eb;
+  /* light gray dashed */
+  border-radius: 12px;
+  /* rounded corners like the shot */
   background: #fff;
   display: flex;
   flex-direction: column;
@@ -1518,7 +1588,7 @@ hr {
   width: 48px;
   height: 48px;
   margin-bottom: 18px;
-  color: #111; 
+  color: #111;
 }
 
 .dz-title {
@@ -1575,6 +1645,64 @@ hr {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+
+/* let children render outside the overlay box */
+.field-overlay {
+  overflow: visible;
+  /* add this */
+}
+
+/* signature & timestamp */
+.timestamp-display-overlay {
+  position: absolute;
+  /* add */
+  left: 50%;
+  /* center horizontally */
+  top: calc(100% + 4px);
+  /* place just BELOW the signature box */
+  transform: translateX(-50%);
+  /* keep centered */
+
+  white-space: nowrap;
+  /* prevent wrapping */
+  z-index: 10;
+  pointer-events: none;
+
+  width: max-content;
+  font-size: 10px;
+  color: #666;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px 4px;
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+
+.timestamp-preview {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #f5f5f5;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+}
+
+.timestamp-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #666;
+}
+
+.timestamp-sample {
+  font-size: 11px;
+  color: #333;
+  font-family: monospace;
+}
+
+.timestamp-option {
+  margin-bottom: 15px;
 }
 
 
