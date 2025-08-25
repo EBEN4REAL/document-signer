@@ -48,7 +48,6 @@ defineEmits(['drag-start', 'save-config', 'sign-pdf'])
 
 <style scoped>
 .toolbar-col {
-  width: 15%;
   background: white;
   border-left: 1px solid #ddd;
   display: flex;
