@@ -1,22 +1,19 @@
 import { createRouter, createWebHistory } from 'vue-router'
-// import HomeView from '../views/HomeView.vue'
 import PdfSignerPage from '../views/PdfSignerPage.vue';
+import DocsSigner from '../views/DocsSigner.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/docs-signer',
+      name: 'DocsSigner',
+      component: DocsSigner,
+    },
+    {
       path: '/',
       name: 'PdfSigner',
       component: PdfSignerPage,
-    },
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
     },
   ],
 })
