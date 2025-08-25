@@ -254,4 +254,8 @@ const previewText = computed(() => {
   margin-top: 1rem;
   justify-content: flex-end;
 }
+
+.hidden-input {
+  display: none;
+}
 </style>
