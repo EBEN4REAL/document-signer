@@ -94,7 +94,7 @@ function onAddPdfUpload(e: Event) {
 
 <style scoped>
 .thumbs-col {
-  width: 15%;
+  /* width: 15%; */
   background: white;
   border-right: 1px solid #ddd;
   display: flex;
