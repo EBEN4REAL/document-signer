@@ -94,9 +94,6 @@ function onAddPdfUpload(e: Event) {
 
 <style scoped>
 .thumbs-col {
-  /* width: 15%; */
-  background: white;
-  border-right: 1px solid #ddd;
   display: flex;
   flex-direction: column;
 }
@@ -111,16 +108,13 @@ function onAddPdfUpload(e: Event) {
   flex: 0 0 auto;
   position: sticky;
   bottom: 0;
-  background: white;
   padding-top: 0.75rem;
-  border-top: 1px solid #eee;
 }
 
 .thumb-wrapper {
   position: relative;
   margin-bottom: 0.75rem;
   cursor: pointer;
-  border: 1px solid #eee;
   border-radius: 6px;
   overflow: hidden;
 }
