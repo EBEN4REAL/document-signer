@@ -4,6 +4,6 @@ import PDFSigner from '@/components/pdf-signer/PdfSigner.vue'
 
 <template>
   <main>
-     <PDFSigner />
+    <PDFSigner />
   </main>
 </template>
