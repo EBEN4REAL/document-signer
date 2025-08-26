@@ -1,53 +1,27 @@
 <template>
   <div class="pdf-signer-container">
-    <DocumentName v-model="documentName" />
+    <DocumentName v-model="documentName" :isLocked="layoutLocked" />
 
     <div class="pdf-signer-content" :class="{ locked: layoutLocked }">
       <!-- LEFT: Pages Thumbnails -->
-      <ThumbnailColumn
-        :pages="pages"
-        @remove-page="removePage"
-        @replace-page="onReplacePdfUpload"
-        @add-documents="onAddPdfUpload"
-        @scroll-to-page="scrollToPage"
-      />
+      <ThumbnailColumn :pages="pages" @remove-page="removePage" @replace-page="onReplacePdfUpload"
+        @add-documents="onAddPdfUpload" @scroll-to-page="scrollToPage" />
 
       <!-- MIDDLE: Canvas pages -->
-      <CanvasColumn
-        :pages="pages"
-        :layoutLocked="layoutLocked"
-        :isLoading="isLoading"
-        :isDragOver="isDragOver"
-        @drop-documents="onDropDocuments"
-        @drop-field="onDropField"
-        @field-mousedown="onFieldMouseDown"
-        @field-delete="removeField"
-        @canvas-mounted="handleCanvasMounted"
-      />
+      <CanvasColumn :pages="pages" :layoutLocked="layoutLocked" :isLoading="isLoading" :isDragOver="isDragOver"
+        @drop-documents="onDropDocuments" @drop-field="onDropField" @field-mousedown="onFieldMouseDown"
+        @field-delete="removeField" @canvas-mounted="handleCanvasMounted" />
 
       <!-- RIGHT: Toolbar -->
-      <ToolbarColumn
-        :layoutLocked="layoutLocked"
-        @drag-start="onDragStart"
-        @save-config="saveConfig"
-        @sign-pdf="signPdf"
-      />
+      <ToolbarColumn :layoutLocked="layoutLocked" @drag-start="onDragStart" @save-config="saveConfig"
+        @sign-pdf="signPdf" />
     </div>
 
     <!-- Editor panel (shows in fill mode when a field is selected) -->
-    <FieldPanel
-      v-if="currentField && layoutLocked"
-      :field="currentField"
-      :drawingSig="drawingSig"
-      @update-field="updateCurrentField"
-      @start-drawing="startDrawingSig"
-      @save-drawn="saveDrawn"
-      @cancel-drawing="cancelDrawing"
-      @sig-selected="onSigSelected"
-      @clear-signature="clearSignature"
-      @apply="applyField"
-      @cancel="cancelField"
-    />
+    <FieldPanel v-if="currentField && layoutLocked" :field="currentField" :drawingSig="drawingSig"
+      @update-field="updateCurrentField" @start-drawing="startDrawingSig" @save-drawn="saveDrawn"
+      @cancel-drawing="cancelDrawing" @sig-selected="onSigSelected" @clear-signature="clearSignature"
+      @apply="applyField" @cancel="cancelField" />
   </div>
 </template>
 
@@ -89,17 +63,16 @@ const { pageCanvases, isLoading, renderPage, generateThumbnail, PADDING } = useP
 const {
   currentField,
   drawingSig,
-  removeField,     // (pageIdx: number, fieldId: string) => void
-  selectField,     // (pageIdx: number, fieldId: string) => void
-  applyField,      // () => void
-  cancelField,     // () => void
+  removeField,
+  selectField,
+  applyField,
 } = useFieldManagement(pages, layoutLocked)
 
 const {
   dragState,
   isDragOver,
-  onDragStart,     // (e: DragEvent, type: 'signature' | 'initial') => void
-  onDropField,     // (pageIdx: number, e: DragEvent) => void
+  onDragStart,
+  onDropField,
   cleanupDragPreview,
 } = useDragAndDrop(pages, layoutLocked, PADDING)
 
@@ -110,6 +83,10 @@ const { saveToIndexedDB, loadFromIndexedDB } = useIndexedDB()
 function onFieldMouseDown(pageIdx: number, fieldId: string) {
   if (!layoutLocked.value) return
   selectField(pageIdx, fieldId) // This opens the panel via currentField
+}
+
+function cancelField() {
+  currentField.value = null
 }
 
 async function onAddPdfUpload(files: FileList) {
@@ -423,12 +400,13 @@ onMounted(async () => {
 /* 3 columns: left (thumbs) | middle (canvas) | right (toolbar) */
 .pdf-signer-content {
   display: grid;
-  grid-template-columns: 260px 1fr 260px; /* tweak widths to taste */
+  grid-template-columns: 260px 1fr 260px;
+  /* tweak widths to taste */
   grid-template-rows: 1fr;
-  column-gap: 16px;
   flex: 1 1 auto;
   background: #f5f5f5;
-  min-height: 0; /* important for proper scrolling in grid children */
+  min-height: 0;
+  /* important for proper scrolling in grid children */
   padding-top: 20px;
 }
 
@@ -445,10 +423,13 @@ onMounted(async () => {
   position: sticky;
   top: 0;
   align-self: start;
-  height: 100vh;       /* lock to viewport height */
-  overflow: hidden;    /* prevent column scrollbars */
+  height: 100vh;
+  /* lock to viewport height */
+  overflow: hidden;
+  /* prevent column scrollbars */
   background: #fff;
-  border-right: 1px solid #ddd; /* thumbs */
+  border-right: 1px solid #ddd;
+  /* thumbs */
 }
 
 /* Optional: separate the toolbar with left border instead */
@@ -460,7 +441,8 @@ onMounted(async () => {
 /* Good mobile behavior */
 @media (max-width: 1024px) {
   .pdf-signer-content {
-    grid-template-columns: 1fr; /* collapse to single column on small screens */
+    grid-template-columns: 1fr;
+    /* collapse to single column on small screens */
   }
 
   /* In small screens you can make everything scroll naturally */
@@ -476,5 +458,4 @@ onMounted(async () => {
     overflow: visible;
   }
 }
-
 </style>
