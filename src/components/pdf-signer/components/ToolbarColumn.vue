@@ -48,11 +48,8 @@ defineEmits(['drag-start', 'save-config', 'sign-pdf'])
 
 <style scoped>
 .toolbar-col {
-  background: white;
-  border-left: 1px solid #ddd;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
 }
 
 .field-selector {
