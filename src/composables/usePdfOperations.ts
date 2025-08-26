@@ -1,4 +1,3 @@
-// src/composables/usePdfOperations.ts
 import { toValue, type MaybeRefOrGetter } from 'vue'
 import * as pdfjsLib from 'pdfjs-dist'
 import type { PageData } from '@/types'
