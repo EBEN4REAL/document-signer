@@ -3,11 +3,6 @@ import { toValue, type MaybeRefOrGetter } from 'vue'
 import * as pdfjsLib from 'pdfjs-dist'
 import type { PageData } from '@/types'
 
-// If you haven't set workerSrc globally elsewhere, you can do it here once.
-// pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-//   'pdfjs-dist/build/pdf.worker.js',
-//   import.meta.url,
-// ).toString()
 
 /** Utility to clone a Uint8Array */
 function cloneBytes(u: Uint8Array) {
