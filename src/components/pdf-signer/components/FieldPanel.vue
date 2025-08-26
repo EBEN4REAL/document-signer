@@ -258,4 +258,8 @@ const previewText = computed(() => {
 .hidden-input {
   display: none;
 }
+
+.draw-actions {
+  margin-top: 20px;
+}
 </style>
