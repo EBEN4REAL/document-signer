@@ -130,7 +130,6 @@ function onChange(e: Event) {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   text-align: center; cursor: pointer;
   transition: border-color .15s, background .15s, box-shadow .15s;
-  margin-top: 20px;
   outline: none;
 }
 .dropzone.drag-over,
