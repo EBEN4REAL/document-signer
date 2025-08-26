@@ -404,10 +404,9 @@ onMounted(async () => {
   /* tweak widths to taste */
   grid-template-rows: 1fr;
   flex: 1 1 auto;
-  background: #f5f5f5;
   min-height: 0;
   /* important for proper scrolling in grid children */
-  padding-top: 20px;
+  padding-top: 10px;
 }
 
 /* Only the middle canvas column should scroll */
@@ -424,18 +423,7 @@ onMounted(async () => {
   top: 0;
   align-self: start;
   height: 100vh;
-  /* lock to viewport height */
   overflow: hidden;
-  /* prevent column scrollbars */
-  background: #fff;
-  border-right: 1px solid #ddd;
-  /* thumbs */
-}
-
-/* Optional: separate the toolbar with left border instead */
-.toolbar-col {
-  border-right: none;
-  border-left: 1px solid #ddd;
 }
 
 /* Good mobile behavior */
