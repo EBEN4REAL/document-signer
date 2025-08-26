@@ -1,11 +1,6 @@
 <template>
   <header class="doc-header" :class="{ dirty: isDirty }">
     <div class="doc-title-wrap">
-      <!-- File icon -->
-      <svg class="doc-icon" viewBox="0 0 24 24" aria-hidden="true">
-        <path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm1 7V3.5L19.5 9H15Z"/>
-      </svg>
-
       <!-- Name input -->
       <input
         ref="documentNameInput"
@@ -95,8 +90,6 @@ function clearName() {
   grid-template-columns: 1fr auto;
   align-items: center;
   gap: .5rem 1rem;
-  padding: .75rem 1rem;
-  /* background: var(--header-bg); */
   -webkit-backdrop-filter: saturate(140%) blur(8px);
   backdrop-filter: saturate(140%) blur(8px);
   border-bottom: 1px solid var(--header-border);
@@ -130,7 +123,7 @@ function clearName() {
   border: 1px solid transparent;
   border-radius: 10px;
   padding: .45rem .7rem;
-  font-size: clamp(1rem, 2.2vw, 1.25rem);
+  font-size: 30px;
   line-height: 1.2;
   outline: none;
   transition: border-color .15s, box-shadow .15s, background .15s;
