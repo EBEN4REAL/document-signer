@@ -1,4 +1,3 @@
-// src/composables/useDragAndDrop.ts
 import { ref, reactive, toValue, type MaybeRefOrGetter, type Ref } from 'vue'
 import type { PageData } from '@/types'
 
