@@ -1,4 +1,3 @@
-// src/composables/usePdfRendering.ts
 import { ref } from 'vue'
 import * as pdfjsLib from 'pdfjs-dist'
 import type { PageViewport, PDFPageProxy } from 'pdfjs-dist'
