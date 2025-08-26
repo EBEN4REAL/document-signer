@@ -1,41 +1,3 @@
-<!-- <template>
-  <div class="document-name">
-    <input
-      ref="documentNameInput"
-      v-model="localValue"
-      @blur="$emit('update:modelValue', localValue)"
-      placeholder="Document name"
-      class="document-name-input"
-    />
-  </div>
-</template>
-
-<script setup lang="ts">
-import { ref, defineProps, defineEmits, watch } from 'vue'
-
-const props = defineProps<{
-  modelValue: string
-}>()
-
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: string): void
-}>()
-
-// local proxy so v-model works
-const localValue = ref(props.modelValue)
-
-// keep localValue in sync when parent changes modelValue
-watch(
-  () => props.modelValue,
-  (newVal) => {
-    if (newVal !== localValue.value) {
-      localValue.value = newVal
-    }
-  },
-)
-</script> -->
-
-
 <template>
   <header class="doc-header" :class="{ dirty: isDirty }">
     <div class="doc-title-wrap">
@@ -56,6 +18,7 @@ watch(
         spellcheck="false"
         autocomplete="off"
         aria-label="Document name"
+        :disabled="isLocked"
       />
 
       <!-- Clear name -->
@@ -82,7 +45,7 @@ watch(
 <script setup lang="ts">
 import { ref, defineProps, defineEmits, watch, computed } from 'vue'
 
-const props = defineProps<{ modelValue: string }>()
+const props = defineProps<{ modelValue: string, isLocked: boolean }>()
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 
 // local proxy so v-model works
@@ -133,7 +96,7 @@ function clearName() {
   align-items: center;
   gap: .5rem 1rem;
   padding: .75rem 1rem;
-  background: var(--header-bg);
+  /* background: var(--header-bg); */
   -webkit-backdrop-filter: saturate(140%) blur(8px);
   backdrop-filter: saturate(140%) blur(8px);
   border-bottom: 1px solid var(--header-border);
