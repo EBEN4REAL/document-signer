@@ -110,6 +110,7 @@ function formatSignedText(date: Date, name = 'Signer') {
   background: #fff;
   border: 1px solid #eee;
   box-shadow: 0 0 4px rgba(0, 0, 0, .1);
+  border-radius: 6px;
 }
 
 /* Overlays (unchanged) */
