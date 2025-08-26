@@ -4,12 +4,7 @@ import * as pdfjsLib from 'pdfjs-dist'
 import type { PageViewport, PDFPageProxy } from 'pdfjs-dist'
 import type { PageData } from '@/types'
 
-// --- Configure the PDF.js worker exactly once ---
-/**
- * Vite-friendly worker path:
- * new URL('pdfjs-dist/build/pdf.worker.min.js', import.meta.url).toString()
- * (falls back to non-min build if needed)
- */
+
 (() => {
   if (typeof window === 'undefined') return
 
