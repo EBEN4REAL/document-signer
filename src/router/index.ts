@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import PdfSignerPage from '../views/PdfSignerPage.vue';
+// import PdfSignerPage from '../views/PdfSignerPage.vue';
 import DocsSigner from '../views/DocsSigner.vue';
 
 const router = createRouter({
@@ -12,8 +12,8 @@ const router = createRouter({
     },
     {
       path: '/',
-      name: 'PdfSigner',
-      component: PdfSignerPage,
+      name: 'DocsSigner',
+      component: DocsSigner,
     },
   ],
 })
