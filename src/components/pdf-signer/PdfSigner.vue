@@ -228,6 +228,7 @@ function initInteractions() {
 
 // ----------------- Persistence -----------------
 async function saveConfig() {
+  console.log('Saving config to IndexedDB...', pages.value);
   const success = await saveToIndexedDB(STORAGE_KEY, NAME_KEY, pages.value, documentName.value)
   if (success) {
     alert('Configuration saved – please refresh to enter Fill mode.')
