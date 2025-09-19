@@ -45,7 +45,7 @@ import { usePdfOperations } from '@/composables/usePdfOperations'
 import { useIndexedDB } from '@/composables/useIndexedDB'
 
 // Types
-import type { PageData, Field } from '@/types'
+import type { PageData, Field, SavedConfig } from '@/types'
 
 const STORAGE_KEY = 'pdfSignerConfigV7'
 const NAME_KEY = 'pdfSignerDocumentNameV7'
@@ -228,43 +228,222 @@ function initInteractions() {
 
 // ----------------- Persistence -----------------
 async function saveConfig() {
-  console.log('Saving config to IndexedDB...', pages.value);
-  const success = await saveToIndexedDB(STORAGE_KEY, NAME_KEY, pages.value, documentName.value)
-  if (success) {
-    alert('Configuration saved – please refresh to enter Fill mode.')
-    window.location.reload()
-  } else {
-    alert('Failed to save configuration.')
+  console.log("Saving config to IndexedDB...", pages.value);
+
+  const serial: SavedConfig = {
+    pages: pages.value.map((p) => ({
+      uid: p.uid,
+      pageNumber: p.pageNumber,
+      pdfBase64: bytesToBase64(p.pdfBytes),
+      fileName: p.fileName,
+      fields: p.fields.map((f) => ({
+        id: f.id,
+        type: f.type,
+        rect: { ...f.rect },
+        initialsText: f.initialsText,
+        sigBase64: f.sigBase64 || undefined,
+        sigType: f.sigType,
+        includeTimestamp: f.includeTimestamp,
+        timestamp: f.timestamp ? f.timestamp.toISOString() : undefined,
+      })),
+    })),
+    documentName: documentName.value,
+  };
+
+  try {
+    await saveToIndexedDB(STORAGE_KEY, serial);
+    alert("Configuration saved – please refresh to enter Fill mode.");
+    window.location.reload();
+  } catch (err) {
+    console.error("Failed to save to IndexedDB:", err);
+    alert("Failed to save configuration.");
   }
 }
 
+
+
+function bufferToBase64(buf: ArrayBuffer): string {
+  let binary = '';
+  const bytes = new Uint8Array(buf);
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const sub = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode.apply(null, sub as unknown as number[]);
+  }
+  return btoa(binary);
+}
+
 // ----------------- Sign PDF -----------------
+// async function signPdf() {
+//   if (!pages.value.length) return
+//   isLoading.value = true
+
+//   try {
+//     const srcDocs = await Promise.all(pages.value.map((p) => PDFDocument.load(p.pdfBytes)))
+//     const srcLibPages = srcDocs.map((d, i) => d.getPages()[pages.value[i].pageNumber - 1])
+
+//     const targetWidth = Math.max(...srcLibPages.map((p) => p.getWidth()))
+//     const outPdf = await PDFDocument.create()
+//     const font = await outPdf.embedFont(StandardFonts.HelveticaBold)
+
+//     for (let i = 0; i < pages.value.length; i++) {
+//       const srcPage = srcLibPages[i]
+//       const origW = srcPage.getWidth()
+//       const origH = srcPage.getHeight()
+//       const scale = targetWidth / origW
+//       const targetH = origH * scale
+
+//       const outPage = outPdf.addPage([targetWidth, targetH])
+//       const embedded = await outPdf.embedPage(srcPage)
+//       outPage.drawPage(embedded, { x: 0, y: 0, width: targetWidth, height: targetH })
+
+//       for (const field of pages.value[i].fields) {
+//         const canvas = pageCanvases.value[i]!
+//         const wrapper = canvas.parentElement as HTMLElement
+
+//         const { x, y, w, h } = toPdfCoordsNormalized(
+//           field.rect,
+//           canvas.getBoundingClientRect(),
+//           wrapper.getBoundingClientRect(),
+//           PADDING,
+//           targetWidth,
+//           targetH,
+//         )
+
+//         if (field.type === 'signature' && field.sigBase64) {
+//             const img =
+//               field.sigType === "png"
+//                 ? await outPdf.embedPng(field.sigBase64)
+//                 : await outPdf.embedJpg(field.sigBase64);
+
+//             outPage.drawImage(img, { x, y, width: w, height: h });
+
+//           if (field.includeTimestamp && field.timestamp) {
+//             const ts = field.timestamp
+//             const timestampText = `Electronically signed by ${signerName} ${ts.toLocaleDateString(
+//               'en-US',
+//             )} at ${ts.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
+//             const timestampSize = Math.min(w * 0.08, 10)
+//             const timestampY = y - timestampSize - 4
+//             outPage.drawText(timestampText, {
+//               x,
+//               y: Math.max(timestampY, 0),
+//               size: timestampSize,
+//               font,
+//               color: rgb(0.4, 0.4, 0.4),
+//             })
+//           }
+//         } else if (field.type === 'initial' && field.initialsText) {
+//           const txt = field.initialsText.trim()
+//           let size = Math.min(h * 0.7, 24)
+//           while (font.widthOfTextAtSize(txt, size) > w - 4 && size > 6) size -= 0.5
+//           outPage.drawText(txt, {
+//             x: x + (w - font.widthOfTextAtSize(txt, size)) / 2,
+//             y: y + (h - size) / 2 + size * 0.2,
+//             size,
+//             font,
+//             color: rgb(0, 0.5, 0),
+//           })
+//         }
+//       }
+//     }
+
+//     // Create a safe Blob from possibly offset Uint8Array
+//     const pdfBytes = await outPdf.save()
+//     const ab = pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength) as ArrayBuffer
+//     const blob = new Blob([ab], { type: 'application/pdf' })
+
+//     const url = URL.createObjectURL(blob)
+//     window.open(url, '_blank', 'noopener,noreferrer')
+
+//     const a = document.createElement('a')
+//     a.href = url
+//     a.download = `${documentName.value}_${new Date().toISOString().slice(0, 10)}.pdf`
+//     a.click()
+//     setTimeout(() => URL.revokeObjectURL(url), 10000)
+//   } catch (err) {
+//     console.error('PDF signing error:', err)
+//     alert('Error generating signed PDF. Please try again.')
+//   } finally {
+//     isLoading.value = false
+//   }
+// }
+
+function cleanBase64(b64: string): string {
+  if (!b64) return "";
+  const commaIdx = b64.indexOf(",");
+  return commaIdx !== -1 ? b64.substring(commaIdx + 1) : b64;
+}
+
+function base64ToBytes(base64?: string): Uint8Array {
+  if (!base64) return new Uint8Array(); // defensive: older records
+  const clean = base64.replace(/[\r\n\s]/g, '');
+  const bin = atob(clean);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+
 async function signPdf() {
-  if (!pages.value.length) return
-  isLoading.value = true
+  if (!pages.value.length) return;
+  isLoading.value = true;
 
   try {
-    const srcDocs = await Promise.all(pages.value.map((p) => PDFDocument.load(p.pdfBytes)))
-    const srcLibPages = srcDocs.map((d, i) => d.getPages()[pages.value[i].pageNumber - 1])
+    // 1) Save config (your simplified version)
+   const signedPayload: SavedConfig = {
+      pages: pages.value.map((p) => ({
+        uid: p.uid,
+        pageNumber: p.pageNumber,
+        pdfBase64: bytesToBase64(p.pdfBytes),  // plain string
+        fileName: p.fileName,
+        fields: p.fields.map((f) => ({
+          id: f.id,
+          type: f.type,
+          rect: { ...f.rect },                  // ensure plain object
+          initialsText: f.initialsText ?? undefined,
+          sigBase64: f.sigBase64 ?? undefined,
+          sigType: f.sigType ?? undefined,
+          includeTimestamp: f.includeTimestamp ?? undefined,
+          timestamp: f.timestamp
+            ? (f.timestamp instanceof Date ? f.timestamp.toISOString() : f.timestamp)
+            : undefined,
+        })),
+      })),
+      documentName: documentName.value,
+    }
+    console.log("signedPayload: => 413", signedPayload);
+    await saveToIndexedDB(STORAGE_KEY, signedPayload);
 
-    const targetWidth = Math.max(...srcLibPages.map((p) => p.getWidth()))
-    const outPdf = await PDFDocument.create()
-    const font = await outPdf.embedFont(StandardFonts.HelveticaBold)
+    // 2) Build PDF
+    const srcDocs = await Promise.all(
+      pages.value.map((p) => PDFDocument.load(p.pdfBytes))
+    );
+    const srcLibPages = srcDocs.map(
+      (d, i) => d.getPages()[pages.value[i].pageNumber - 1]
+    );
+
+    const targetWidth = Math.max(...srcLibPages.map((p) => p.getWidth()));
+    const outPdf = await PDFDocument.create();
+    const font = await outPdf.embedFont(StandardFonts.HelveticaBold);
 
     for (let i = 0; i < pages.value.length; i++) {
-      const srcPage = srcLibPages[i]
-      const origW = srcPage.getWidth()
-      const origH = srcPage.getHeight()
-      const scale = targetWidth / origW
-      const targetH = origH * scale
+      const srcPage = srcLibPages[i];
+      const scale = targetWidth / srcPage.getWidth();
+      const targetH = srcPage.getHeight() * scale;
 
-      const outPage = outPdf.addPage([targetWidth, targetH])
-      const embedded = await outPdf.embedPage(srcPage)
-      outPage.drawPage(embedded, { x: 0, y: 0, width: targetWidth, height: targetH })
+      const outPage = outPdf.addPage([targetWidth, targetH]);
+      const embedded = await outPdf.embedPage(srcPage);
+      outPage.drawPage(embedded, {
+        x: 0,
+        y: 0,
+        width: targetWidth,
+        height: targetH,
+      });
 
       for (const field of pages.value[i].fields) {
-        const canvas = pageCanvases.value[i]!
-        const wrapper = canvas.parentElement as HTMLElement
+        const canvas = pageCanvases.value[i]!;
+        const wrapper = canvas.parentElement as HTMLElement;
 
         const { x, y, w, h } = toPdfCoordsNormalized(
           field.rect,
@@ -272,66 +451,83 @@ async function signPdf() {
           wrapper.getBoundingClientRect(),
           PADDING,
           targetWidth,
-          targetH,
-        )
+          targetH
+        );
 
-        if (field.type === 'signature' && field.sigBuffer) {
+        if (field.type === "signature" && field.sigBase64) {
+          const clean = cleanBase64(field.sigBase64);
+
           const img =
-            field.sigType === 'png'
-              ? await outPdf.embedPng(field.sigBuffer)
-              : await outPdf.embedJpg(field.sigBuffer)
-          outPage.drawImage(img, { x, y, width: w, height: h })
+            field.sigType === "png"
+              ? await outPdf.embedPng(clean)   // 👈 pass clean base64 directly
+              : await outPdf.embedJpg(clean);
+
+          outPage.drawImage(img, { x, y, width: w, height: h });
 
           if (field.includeTimestamp && field.timestamp) {
-            const ts = field.timestamp
-            const timestampText = `Electronically signed by ${signerName} ${ts.toLocaleDateString(
-              'en-US',
-            )} at ${ts.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
-            const timestampSize = Math.min(w * 0.08, 10)
-            const timestampY = y - timestampSize - 4
-            outPage.drawText(timestampText, {
+            const ts = field.timestamp;
+            const tsText = `Electronically signed by ${signerName} ${ts.toLocaleDateString(
+              "en-US"
+            )} at ${ts.toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+            })}`;
+            const tsSize = Math.min(w * 0.08, 10);
+
+            outPage.drawText(tsText, {
               x,
-              y: Math.max(timestampY, 0),
-              size: timestampSize,
+              y: Math.max(y - tsSize - 4, 0),
+              size: tsSize,
               font,
               color: rgb(0.4, 0.4, 0.4),
-            })
+            });
           }
-        } else if (field.type === 'initial' && field.initialsText) {
-          const txt = field.initialsText.trim()
-          let size = Math.min(h * 0.7, 24)
-          while (font.widthOfTextAtSize(txt, size) > w - 4 && size > 6) size -= 0.5
+        } else if (field.type === "initial" && field.initialsText) {
+          const txt = field.initialsText.trim();
+          let size = Math.min(h * 0.7, 24);
+          while (font.widthOfTextAtSize(txt, size) > w - 4 && size > 6) {
+            size -= 0.5;
+          }
           outPage.drawText(txt, {
             x: x + (w - font.widthOfTextAtSize(txt, size)) / 2,
             y: y + (h - size) / 2 + size * 0.2,
             size,
             font,
             color: rgb(0, 0.5, 0),
-          })
+          });
         }
       }
     }
 
-    // Create a safe Blob from possibly offset Uint8Array
-    const pdfBytes = await outPdf.save()
-    const ab = pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength) as ArrayBuffer
-    const blob = new Blob([ab], { type: 'application/pdf' })
+    // 3) Output PDF
+    const pdfBytes = await outPdf.save();
 
-    const url = URL.createObjectURL(blob)
-    window.open(url, '_blank', 'noopener,noreferrer')
+    // ✅ Force into a fresh Uint8Array (no SharedArrayBuffer type issues)
+    const normalized = new Uint8Array(pdfBytes);
 
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${documentName.value}_${new Date().toISOString().slice(0, 10)}.pdf`
-    a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 10000)
+    const blob = new Blob([normalized], { type: "application/pdf" });
+
+
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank", "noopener,noreferrer");
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${documentName.value}_${new Date()
+      .toISOString()
+      .slice(0, 10)}.pdf`;
+    a.click();
+
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
   } catch (err) {
-    console.error('PDF signing error:', err)
-    alert('Error generating signed PDF. Please try again.')
+    console.error("PDF signing error:", err);
+    alert("Error generating signed PDF.");
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
 }
+
+
 
 // ----------------- Signature editing -----------------
 function startDrawingSig() {
@@ -339,18 +535,41 @@ function startDrawingSig() {
 }
 
 // Receives ArrayBuffer from FieldPanel's draw canvas
-async function saveDrawn(buf: ArrayBuffer) {
+// async function saveDrawn() {
+//   if (!currentField.value) return
+//   const canvas = document.querySelector<HTMLCanvasElement>('.draw-pad')
+//   if (!canvas) return
+
+//   // raw base64 (no data: prefix) for storage, dataURL for preview
+//   const dataUrl = canvas.toDataURL('image/png')
+//   const base64 = dataUrl.split(',')[1]
+
+//   setFieldById(currentField.value.id, {
+//     sigBase64: base64,
+//     sigType: 'png',
+//     sigPreviewUrl: dataUrl,
+//   })
+
+//   drawingSig.value = false
+// }
+
+async function saveDrawn() {
   if (!currentField.value) return
-  const idx = pages.value.findIndex((pg) => pg.fields.some((f) => f.id === currentField.value!.id))
-  if (idx >= 0) {
-    const f = pages.value[idx].fields.find((x) => x.id === currentField.value!.id)!
-    f.sigBuffer = buf
-    f.sigType = 'png'
-    currentField.value.sigBuffer = buf
-    currentField.value.sigType = 'png'
-  }
+  const canvas = document.querySelector<HTMLCanvasElement>('.draw-pad')
+  if (!canvas) return
+
+  const dataUrl = canvas.toDataURL('image/png')
+  const base64 = dataUrl.split(',')[1]
+
+  setFieldById(currentField.value.id, {
+    sigBase64: base64,       // ✅ save raw base64
+    sigType: 'png',
+    sigPreviewUrl: dataUrl,  // ✅ preview in UI
+  })
+
   drawingSig.value = false
 }
+
 
 function cancelDrawing() {
   drawingSig.value = false
@@ -359,35 +578,107 @@ function cancelDrawing() {
 async function onSigSelected(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file || !currentField.value) return
-  const buf = await file.arrayBuffer()
-  currentField.value.sigBuffer = buf
-  currentField.value.sigType = file.type.includes('jpeg') ? 'jpg' : 'png'
+
+  const reader = new FileReader()
+  reader.onload = () => {
+    const dataUrl = reader.result as string
+    const base64 = dataUrl.split(',')[1] || ''
+    const type: 'png' | 'jpg' = file.type.includes('jpeg') ? 'jpg' : 'png'
+
+    setFieldById(currentField.value!.id, {
+      sigBase64: base64,       // ✅ raw base64
+      sigType: type,
+      sigPreviewUrl: dataUrl,  // ✅ preview
+    })
+  }
+  reader.readAsDataURL(file)
 }
+
 
 function clearSignature() {
   if (!currentField.value) return
-  currentField.value.sigBuffer = undefined
+  currentField.value.sigBase64 = undefined
   currentField.value.sigType = undefined
+  currentField.value.sigPreviewUrl = undefined
 }
 
+function setFieldById(fieldId: string, patch: Partial<Field>) {
+  const pi = pages.value.findIndex(p => p.fields.some(f => f.id === fieldId))
+  if (pi === -1) return
+  const fi = pages.value[pi].fields.findIndex(f => f.id === fieldId)
+  const updated = { ...pages.value[pi].fields[fi], ...patch }
+  // replace (so Vue reactivity sees it)
+  pages.value[pi].fields.splice(fi, 1, updated)
+  // keep panel copy in sync too
+  if (currentField.value?.id === fieldId) currentField.value = { ...updated }
+}
+
+
 function updateCurrentField(updates: Partial<Field>) {
+  console.log
   if (!currentField.value) return
-  Object.assign(currentField.value, updates)
+  const merged = { ...currentField.value, ...updates }
+  setFieldById(currentField.value.id, merged)
 }
 
 // ----------------- Mount -----------------
+// --- onMounted: load from IndexedDB and HYDRATE into PageData ---
 onMounted(async () => {
-  const config = await loadFromIndexedDB(STORAGE_KEY, NAME_KEY)
-  if (config) {
-    documentName.value = config.documentName
-    pages.value.push(...config.pages)
-    layoutLocked.value = true
-    await nextTick()
-    await generateThumbnails()
-    await nextTick()
-    await renderAllPages()
+  const config = await loadFromIndexedDB(STORAGE_KEY); // returns SavedConfig
+  if (!config) return;
+
+  documentName.value = config.documentName ?? '';
+
+  // Map SavedConfig -> PageData (runtime)
+  const restoredPages: PageData[] = config.pages.map((s) => ({
+    uid: s.uid,
+    pageNumber: s.pageNumber,
+    pdfBytes: s.pdfBytes,              // 👈 hydrate
+    viewport: null,
+    imageData: null,
+    thumbnailUrl: '',
+    fileName: s.fileName ?? '',
+    fields: s.fields.map((f) => ({
+      id: f.id,
+      type: f.type,
+      rect: { ...f.rect },
+      initialsText: f.initialsText,
+      sigBase64: f.sigBase64,                          // stays base64
+      sigType: f.sigType,
+      includeTimestamp: f.includeTimestamp,
+      timestamp: f.timestamp ? new Date(f.timestamp) : undefined, // 👈 Date
+      sigPreviewUrl: f.sigBase64
+        ? `data:${f.sigType === 'jpg' ? 'image/jpeg' : 'image/png'};base64,${f.sigBase64}`
+        : undefined,
+    })),
+  }));
+
+  // Replace the reactive array so Vue updates properly
+  pages.value.splice(0, pages.value.length, ...restoredPages);
+
+  // Enter Fill mode and render
+  layoutLocked.value = true;
+  await nextTick();
+  await generateThumbnails();
+  await nextTick();
+  await renderAllPages();
+
+  // Optional sanity check
+  // console.log('Restored pages:', pages.value.map(p => ({ uid: p.uid, fields: p.fields.length, pdfLen: p.pdfBytes.length })));
+});
+
+
+// --- helpers (use these exact versions) ---
+function bytesToBase64(bytes: Uint8Array): string {
+  // chunked to avoid call-stack / invalid base64 on large PDFs
+  let binary = '';
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    const sub = bytes.subarray(i, i + chunk);
+    binary += String.fromCharCode.apply(null, sub as unknown as number[]);
   }
-})
+  return btoa(binary);
+}
 </script>
 
 <style scoped>
