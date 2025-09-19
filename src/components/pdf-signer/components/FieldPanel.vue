@@ -47,7 +47,7 @@
         ></canvas>
 
         <img
-          v-else-if="field.sigBuffer"
+          v-else-if="field.sigBase64"
           :src="sigUrl"
           class="preview-img"
         />
@@ -147,9 +147,10 @@ function onToggleTimestamp(e: Event) {
 }
 
 const sigUrl = computed(() => {
-  if (!props.field.sigBuffer) return ''
+  if (!props.field.sigBase64) return ''
   const type = props.field.sigType === 'jpg' ? 'image/jpeg' : 'image/png'
-  return URL.createObjectURL(new Blob([props.field.sigBuffer], { type }))
+  // return URL.createObjectURL(new Blob([props.field.sigBase64], { type }))
+  return `data:${props.field.sigType === 'jpg' ? 'image/jpeg' : 'image/png'};base64,${props.field.sigBase64}`
 })
 
 const previewText = computed(() => {
