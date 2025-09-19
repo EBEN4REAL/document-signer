@@ -7,8 +7,9 @@ export interface FieldRect {
   height: number
 }
 
-
+// types.ts
 export interface SavedConfig {
+  documentName: string
   pages: Array<{
     uid: string
     pageNumber: number
@@ -19,7 +20,7 @@ export interface SavedConfig {
       type: 'signature' | 'initial'
       rect: FieldRect
       initialsText?: string
-      sigBuffer?: number[]
+      sigBase64?: string
       sigType?: 'png' | 'jpg'
       includeTimestamp?: boolean
       timestamp?: string
@@ -27,23 +28,28 @@ export interface SavedConfig {
   }>
 }
 
+
 export interface Field {
   id: string
-  type: 'signature' | 'initial'
+  type: "signature" | "initial"
   rect: FieldRect
   initialsText?: string
-  sigBuffer?: ArrayBuffer
-  sigType?: 'png' | 'jpg'
+
+  sigBase64?: string
+  sigType?: "png" | "jpg"
   includeTimestamp?: boolean
-  timestamp?: Date
+  timestamp?: Date   // 👈 runtime uses Date
+  sigPreviewUrl?: string 
 }
+
+
 
 export interface PageData {
   uid: string
   pageNumber: number
   pdfBytes: Uint8Array
-  viewport: PageViewport | null
-  imageData: ImageData | null
+  viewport: any
+  imageData: any
   thumbnailUrl: string
   fields: Field[]
   fileName: string
