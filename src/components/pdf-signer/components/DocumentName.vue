@@ -53,7 +53,7 @@ watch(() => props.modelValue, (v) => {
 const placeholder = 'Untitled document'
 const MAX_LEN = 120
 const validationMsg = computed(() =>
-  localValue.value.length > MAX_LEN ? `Keep it under ${MAX_LEN} characters` : ''
+  localValue?.value?.length > MAX_LEN ? `Keep it under ${MAX_LEN} characters` : ''
 )
 const isDirty = computed(() => localValue.value !== props.modelValue)
 
