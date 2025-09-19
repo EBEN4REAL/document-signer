@@ -1,6 +1,6 @@
 <template>
   <div class="signature-field">
-    <img v-if="field.sigBuffer" :src="sigUrl" class="sig-img" />
+    <img v-if="field.sigBase64" :src="sigUrl" class="sig-img" />
     <span v-else class="sig-icon">✒️</span>
 
     <div
@@ -24,12 +24,12 @@ const props = defineProps<{
 const signerName = "Oprah Winfrey"
 
 const sigUrl = computed(() => {
-  if (!props.field.sigBuffer) return ''
-  return URL.createObjectURL(
-    new Blob([props.field.sigBuffer], { 
-      type: props.field.sigType === 'png' ? 'image/png' : 'image/jpeg' 
-    })
-  )
+  if (!props.field.sigBase64) return ''
+  return `data:${props.field.sigType === 'jpg' ? 'image/jpeg' : 'image/png'};base64,${props.field.sigBase64}`;
+  // return URL.createObjectURL(
+  //   new Blob([props.field.sigBuffer], { 
+  //     type: props.field.sigType === 'png' ? 'image/png' : 'image/jpeg' 
+  //   })
 })
 
 const formatSignedText = (date: Date, name: string) => {
