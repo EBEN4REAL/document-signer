@@ -26,10 +26,6 @@ const signerName = "Oprah Winfrey"
 const sigUrl = computed(() => {
   if (!props.field.sigBase64) return ''
   return `data:${props.field.sigType === 'jpg' ? 'image/jpeg' : 'image/png'};base64,${props.field.sigBase64}`;
-  // return URL.createObjectURL(
-  //   new Blob([props.field.sigBuffer], { 
-  //     type: props.field.sigType === 'png' ? 'image/png' : 'image/jpeg' 
-  //   })
 })
 
 const formatSignedText = (date: Date, name: string) => {
