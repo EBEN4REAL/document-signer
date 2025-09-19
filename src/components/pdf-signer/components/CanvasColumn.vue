@@ -23,8 +23,14 @@
           ✕
         </button>
 
-        <img v-if="f.type === 'signature' && f.sigBuffer" :src="getSigUrl(f)" class="sig-img" />
+        <!-- Signature image -->
+        <img
+          v-if="f.type === 'signature' && (f.sigPreviewUrl || f.sigBase64)"
+          :src="f.sigPreviewUrl || `data:${f.sigType === 'jpg' ? 'image/jpeg' : 'image/png'};base64,${f.sigBase64}`"
+          class="sig-img"
+        />
         <span v-else-if="f.type === 'signature'" class="sig-icon">✒️</span>
+
 
         <span v-if="f.type === 'initial' && f.initialsText" class="initial-text">{{ f.initialsText }}</span>
 
@@ -80,9 +86,9 @@ function mountCanvas(idx: number, el: Element | null) {
 }
 
 function getSigUrl(f: Field): string {
-  if (!f.sigBuffer) return ''
+  if (!f.sigBase64) return ''
   const type = f.sigType === 'jpg' ? 'image/jpeg' : 'image/png'
-  return URL.createObjectURL(new Blob([f.sigBuffer], { type }))
+  return URL.createObjectURL(new Blob([f.sigBase64], { type }))
 }
 
 function formatSignedText(date: Date, name = 'Signer') {
