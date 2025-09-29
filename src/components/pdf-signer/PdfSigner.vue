@@ -412,7 +412,7 @@ async function signPdf() {
       })),
       documentName: documentName.value,
     }
-    console.log("signedPayload: => 413", signedPayload);
+    console.log("signedPayload: => 415", signedPayload);
     await saveToIndexedDB(STORAGE_KEY, signedPayload);
 
     // 2) Build PDF
