@@ -7,12 +7,14 @@
       @update:dragOver="(v: boolean) => emit('update:isDragOver', v)" @rejected="onDropzoneRejected" />
 
     <!-- Pages -->
-    <div v-for="(p, idx) in pages" :key="p.uid" class="page-wrapper">
+    <div v-for="(p, idx) in pages" :key="p.uid" class="page-wrapper" @dragover.prevent
+      @drop="(e) => $emit('drop-field', idx, e)">
       <canvas :ref="(el) => mountCanvas(idx, el as unknown as HTMLCanvasElement | null)" class="pdf-canvas"
         @dragover.prevent @drop="(e) => $emit('drop-field', idx, e)" />
       <!-- Overlays -->
-      <div v-for="f in p.fields" :key="f.id" class="field-overlay" :class="[f.type, { locked: layoutLocked }]"
-        :data-id="f.id" :style="{
+      <div v-for="f in p.fields" :key="f.id" class="field-overlay"
+        :class="[f.type, { locked: layoutLocked, 'overlay-hidden': !props.overlaysReady }]" :data-id="f.id"
+        :style="{
           left: f.rect.x + 'px',
           top: f.rect.y + 'px',
           width: f.rect.width + 'px',
@@ -47,11 +49,12 @@ import { defineProps, defineEmits, ref, watch } from 'vue'
 import type { PageData, Field } from '@/types'
 import DropZone from './DropZone.vue';
 
-const props = defineProps<{
+const props = defineProps<{ 
   pages: PageData[]
   layoutLocked: boolean
   isLoading: boolean
   isDragOver: boolean
+  overlaysReady: boolean
   signerName?: string
 }>()
 
@@ -134,6 +137,11 @@ function formatSignedText(date: Date, name = 'Signer') {
 
 .field-overlay.locked {
   border-style: solid;
+}
+
+.overlay-hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .field-delete {

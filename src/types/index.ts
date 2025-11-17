@@ -19,6 +19,7 @@ export interface SavedConfig {
       id: string
       type: 'signature' | 'initial'
       rect: FieldRect
+      rectNormalized?: FieldRect
       initialsText?: string
       sigBase64?: string
       sigType?: 'png' | 'jpg'
@@ -33,6 +34,7 @@ export interface Field {
   id: string
   type: "signature" | "initial"
   rect: FieldRect
+  rectNormalized?: FieldRect
   initialsText?: string
 
   sigBase64?: string

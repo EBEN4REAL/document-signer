@@ -1,5 +1,5 @@
 import { ref, reactive, toValue, type MaybeRefOrGetter, type Ref } from 'vue'
-import type { PageData } from '@/types'
+import type { PageData, Field } from '@/types'
 
 // Define what the composable returns
 export interface DragAndDropComposable {
@@ -19,7 +19,8 @@ export interface DragAndDropComposable {
 export function useDragAndDrop(
   pages: MaybeRefOrGetter<PageData[]>,   // <-- accepts ref or array
   layoutLocked: Ref<boolean>,
-  PADDING: number
+  PADDING: number,
+  onFieldPlaced?: (pageIdx: number, field: Field) => void,
 ): DragAndDropComposable {
   const isDragOver = ref(false)
 
@@ -72,6 +73,7 @@ export function useDragAndDrop(
   function onDropField(pageIdx: number, e: DragEvent) {
     if (layoutLocked.value) return
     e.preventDefault()
+    e.stopPropagation()
 
     const list = toValue(pages)
     const page = list[pageIdx]
@@ -108,7 +110,7 @@ export function useDragAndDrop(
     const clampedY = Math.min(Math.max(top, minY), maxY - dragState.boxH)
 
     // Push new field into page
-    page.fields.push({
+    const field: Field = {
       id: crypto.randomUUID(),
       type,
       rect: {
@@ -117,7 +119,9 @@ export function useDragAndDrop(
         width: dragState.boxW,
         height: dragState.boxH,
       },
-    })
+    }
+    page.fields.push(field)
+    onFieldPlaced?.(pageIdx, field)
 
     cleanupDragPreview()
   }
