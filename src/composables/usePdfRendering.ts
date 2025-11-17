@@ -33,7 +33,9 @@ export function usePdfRendering() {
 
   const PADDING = 6
   const SCALE = 1.25
-  const DPR = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
+
+  const getDpr = () => (typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1)
+  let DPR = getDpr()
 
   /**
    * Ensure we always return a fresh, tightly-bound Uint8Array copy.
@@ -55,15 +57,21 @@ export function usePdfRendering() {
     const vp = pg.getViewport({ scale: SCALE })
     page.viewport = vp as PageViewport
 
-    canvas.width = Math.round((vp.width + PADDING * 2) * DPR)
-    canvas.height = Math.round((vp.height + PADDING * 2) * DPR)
-    canvas.style.width = '100%'
+    const dpr = getDpr()
+    DPR = dpr
+
+    const cssWidth = vp.width + PADDING * 2
+    const cssHeight = vp.height + PADDING * 2
+    canvas.width = Math.round(cssWidth * dpr)
+    canvas.height = Math.round(cssHeight * dpr)
+    canvas.style.width = `${cssWidth}px`
+    canvas.style.maxWidth = '100%'
     canvas.style.height = 'auto'
 
     const ctx = canvas.getContext('2d')!
     ctx.setTransform(1, 0, 0, 1, 0, 0)
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-    ctx.setTransform(DPR, 0, 0, DPR, PADDING * DPR, PADDING * DPR)
+    ctx.setTransform(dpr, 0, 0, dpr, PADDING * dpr, PADDING * dpr)
 
     const task = pg.render({ canvasContext: ctx, viewport: vp })
     renderTasks.value[index] = task
@@ -96,5 +104,6 @@ export function usePdfRendering() {
     PADDING,
     SCALE,
     DPR,
+    getDpr,
   }
 }
