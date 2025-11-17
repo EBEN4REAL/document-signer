@@ -64,6 +64,8 @@ const { pageCanvases, isLoading, renderPage, generateThumbnail, PADDING } = useP
 const pageSizeCache = new Map<string, { width: number; height: number }>()
 const pageResizeObservers = new Map<string, ResizeObserver>()
 const overlaysReady = ref(true)
+let viewportCleanup: (() => void) | null = null
+let viewportRerenderTimer: number | null = null
 
 // NOTE: These composables accept Ref<PageData[]>
 const {
@@ -271,6 +273,44 @@ function cleanupAllPageObservers() {
   pageResizeObservers.forEach((observer) => observer.disconnect())
   pageResizeObservers.clear()
   pageSizeCache.clear()
+}
+
+function scheduleViewportRerender() {
+  if (!pages.value.length) return
+  if (viewportRerenderTimer !== null) {
+    clearTimeout(viewportRerenderTimer)
+  }
+  viewportRerenderTimer = window.setTimeout(async () => {
+    viewportRerenderTimer = null
+    await renderAllPages()
+  }, 120)
+}
+
+function handleViewportResize() {
+  if (typeof window === 'undefined') return
+  scheduleViewportRerender()
+}
+
+function setupViewportListeners() {
+  if (typeof window === 'undefined') return
+  if (viewportCleanup) viewportCleanup()
+  const handler = () => handleViewportResize()
+  window.addEventListener('resize', handler)
+  const vv = window.visualViewport
+  vv?.addEventListener('resize', handler)
+  viewportCleanup = () => {
+    window.removeEventListener('resize', handler)
+    vv?.removeEventListener('resize', handler)
+  }
+}
+
+function cleanupViewportListeners() {
+  viewportCleanup?.()
+  viewportCleanup = null
+  if (viewportRerenderTimer !== null) {
+    clearTimeout(viewportRerenderTimer)
+    viewportRerenderTimer = null
+  }
 }
 
 type CanvasMetrics = {
@@ -822,6 +862,7 @@ function updateCurrentField(updates: Partial<Field>) {
 // ----------------- Mount -----------------
 // --- onMounted: load from IndexedDB and HYDRATE into PageData ---
 onMounted(async () => {
+  setupViewportListeners()
   const config = await loadFromIndexedDB(STORAGE_KEY); // returns SavedConfig
   if (!config) return;
 
@@ -870,6 +911,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   cleanupAllPageObservers()
+  cleanupViewportListeners()
 })
 
 
