@@ -114,7 +114,9 @@ function formatSignedText(date: Date, name = 'Signer') {
 }
 
 .pdf-canvas {
-  width: 100% !important;
+  display: block;
+  width: auto !important;
+  max-width: 100%;
   height: auto !important;
   background: #fff;
   border: 1px solid #eee;
